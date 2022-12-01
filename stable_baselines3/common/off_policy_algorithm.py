@@ -581,7 +581,9 @@ class OffPolicyAlgorithm(BaseAlgorithm):
 
                 # Select action randomly or according to policy
                 action, buffer_action = self._sample_action(learning_starts, action_noise)
-
+                #print(action)
+                #print(buffer_action)
+                #exit()
                 # Rescale and perform action
                 new_obs, reward, done, infos = env.step(action)
                 #env.render()
@@ -589,6 +591,8 @@ class OffPolicyAlgorithm(BaseAlgorithm):
                 name = env.envs[0].unwrapped.spec.id
                 #print("at the beg : "+str(callback.ctr)+" "+str(callback.n_calls))
                 ############################################################################
+
+                
 
                 if name=="HalfCheetah-v3" and reward_type=="STL":
                     ########### ADDITION #########################
@@ -606,10 +610,9 @@ class OffPolicyAlgorithm(BaseAlgorithm):
 
                         if sem=="agm":
                             # normalisation is required for AGM robustness
-                            spec.spec = 'eventually[0,10](x>0.001)'
+                            spec.spec = 'eventually[0,10](v>0.002)' 
                         else:
-                            #spec3
-                            spec.spec = 'eventually[0,10](x>0.1)'
+                            spec.spec = 'eventually[0,10](v>0.1)'
                     
                         try:
                             spec.parse()
@@ -619,7 +622,7 @@ class OffPolicyAlgorithm(BaseAlgorithm):
                             sys.exit()
 
                     if sem=="agm":
-                        rob = spec.update(callback.ctr, [('x', x/100), ('v', v/5)])
+                        rob = spec.update(callback.ctr, [('x', x/100), ('v', v/50)])
                     else:
                         rob = spec.update(callback.ctr, [('x', x), ('v', v)])
                     reward=rob
@@ -646,10 +649,9 @@ class OffPolicyAlgorithm(BaseAlgorithm):
                         
                         if sem=="agm":
                             # normalisation is required for AGM robustness
-                            spec.spec = 'eventually[0,15](p>0.025) and always[0,20]((z>0.5) and (abs(a)<0.2))'
+                            spec.spec = 'eventually[0,15](v>0.1) and always[0,20]((z>0.5) and (abs(a)<0.2))'
                         else:
-                            #spec 17
-                            spec.spec = 'eventually[0,15](p>0.5) and always[0,20]((z>0.7) and (abs(a)<1))'
+                            spec.spec = 'eventually[0,15](v>0.5) and always[0,20]((z>0.7) and (abs(a)<1))'
 
                         try:
                             spec.parse()
@@ -658,7 +660,7 @@ class OffPolicyAlgorithm(BaseAlgorithm):
                             print('RTAMT Exception: {}'.format(err))
                             sys.exit()
                     if sem=="agm":
-                        rob = spec.update(callback.ctr, [('p', p/20), ('v', v/2), ('z', z/1.5), ('a', a/5) , ('t',callback.ctr)])
+                        rob = spec.update(callback.ctr, [('p', p/20), ('v', v/5), ('z', z/1.5), ('a', a/5) , ('t',callback.ctr)])
                     else:
                         rob = spec.update(callback.ctr, [('p', p), ('v', v), ('z', z), ('a', a) , ('t',callback.ctr)])
                     #log = [self._episode_num,callback.ctr,p,z,a,rob]
@@ -688,11 +690,9 @@ class OffPolicyAlgorithm(BaseAlgorithm):
                         #functional specification - for training
                         if sem=="agm":
                             # normalisation is required for AGM robustness
-                            spec.spec = 'eventually[0,15] (px>0.025) and always[0,20]((abs(z-0.6)<1.4) and (abs(a)<0.33))' 
+                            spec.spec = 'eventually[0,15] (vx>0.025) and always[0,20]((abs(z-0.6)<1.4) and (abs(a)<0.33))' #812 
                         else:
-                            #spec8
-                            spec.spec = 'eventually[0,15] (px>0.5) and always[0,20]((abs(z-0.6)<1.4) and (abs(a)<1))' 
-
+                            spec.spec = 'eventually[0,15] (vx>0.5) and always[0,20]((abs(z-0.6)<1.4) and (abs(a)<1))' 
 
                         try:
                             spec.parse()
@@ -701,7 +701,7 @@ class OffPolicyAlgorithm(BaseAlgorithm):
                             print('RTAMT Exception: {}'.format(err))
                             sys.exit()
                     if sem=="agm":
-                        rob = spec.update(callback.ctr, [('px', px/20), ('vx', vx/5), ('z', z), ('a', a/3)])
+                        rob = spec.update(callback.ctr, [('px', px/20), ('vx', vx/20), ('z', z), ('a', a/3)])
                     else:
                         rob = spec.update(callback.ctr, [('px', px), ('vx', vx), ('z', z), ('a', a)])
                     reward=rob
@@ -728,13 +728,12 @@ class OffPolicyAlgorithm(BaseAlgorithm):
                         spec.declare_var('z', 'float')
                         #functional specification - for training
 
-
                         if sem=="agm":
                             spec.spec = 'eventually[0,5](vx>0.01) and always[0,10](abs(z-0.6)<0.4)'
                         else:
                             #run5
                             spec.spec = 'eventually[0,5](vx>0.2) and always[0,10](abs(z-0.6)<0.4)'
-                            
+                                              
 
                         try:
                             spec.parse()
@@ -775,7 +774,7 @@ class OffPolicyAlgorithm(BaseAlgorithm):
                         else:
                             #spec4
                             spec.spec = 'eventually[0,15](vx>0.1) and always[0,20]((abs(a1)<1) and (abs(a2)<1) and (abs(a3)<1))'
-
+                           
                         try:
                             spec.parse()
                             spec.pastify()
@@ -816,10 +815,9 @@ class OffPolicyAlgorithm(BaseAlgorithm):
                         spec.declare_var('re', 'float')
                         
                         if sem=="agm":
-                            spec.spec = 'eventually[0,5]((px>0.05) and (abs(py)<1)) and always[0,5](abs(z-1.5)<0.5)'
+                            spec.spec = 'eventually[0,5](vx>0.05) and always[0,5](abs(z-1.5)<0.5)'
                         else:
-                            #spec
-                            spec.spec = 'eventually[0,5]((px>0.5) and (abs(py)<2)) and always[0,5](abs(z-1.5)<0.5)'
+                            spec.spec = 'eventually[0,5](vx>0.1) and always[0,5](abs(z-1.5)<0.5)'
                         
                         try:
                             spec.parse()
@@ -828,7 +826,7 @@ class OffPolicyAlgorithm(BaseAlgorithm):
                             print('RTAMT Exception: {}'.format(err))
                             sys.exit()
                     if sem=="agm":
-                        rob = spec.update(callback.ctr, [('px', px/10), ('vx', vx), ('py',py/2), ('z',z), ('xo',xo), ('yo',yo), ('zo',zo)])
+                        rob = spec.update(callback.ctr, [('px', px/10), ('vx', vx/2), ('py',py/2), ('z',z), ('xo',xo), ('yo',yo), ('zo',zo)])
                     else:
                         rob = spec.update(callback.ctr, [('px', px), ('vx', vx), ('py',py), ('z',z), ('xo',xo), ('yo',yo), ('zo',zo)])
 
